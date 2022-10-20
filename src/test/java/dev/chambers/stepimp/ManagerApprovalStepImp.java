@@ -53,7 +53,7 @@ public class ManagerApprovalStepImp {
     @When("the manager updates the request status to {string}")
     public void the_manager_updates_the_request_status_to(String string) {
         WebElement statusSelect = driver.findElement(By.xpath("/html/body/p[1]/select"));
-        statusSelect.sendKeys(Keys.DOWN);
+        statusSelect.sendKeys(string);
     }
 
 

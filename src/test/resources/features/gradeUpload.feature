@@ -10,6 +10,6 @@ Feature: Grade Upload
   Scenario: T-17 Manager Confirms Passing
     Given the manager is logged in on the home page
     When the manager clicks "details" for a test case
-    When the manager updates the request status "Approved -- Funds Dispersed"
+    When the manager updates the request status to "Approved -- Funds Dispersed"
     When the manager clicks the Confirm Changes button
     Then the request should update with the new information
