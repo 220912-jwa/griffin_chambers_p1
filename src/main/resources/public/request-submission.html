@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Submit a New Request</title>
+    </head>
+    <body onload="getAvailableFunds()">
+        <h1>Reimbursement Request Form</h1>
+        
+        <label for="event_date">Event Date:</label>
+        <input id="event_date" type="date" required>
+        <br>
+        <label for="event_description">Event Description:</label>
+    
+        <input id="event_description" type="text" minlength="5" placeholder="Describe the event" required>
+        <br>
+        <label for="employee_justification" >Employee Justification:</label>
+        
+        <input id="employee_justification" minlength="5" type="text"required >
+        <br>
+        <label for="event_type">Event Type:</label>
+        
+        <select id="event_type">
+            <option value="null">Select One...</option>
+            <option value=1>University Course -- 80% Covered</option>
+            <option value=2>Seminar -- 60% Covered</option>
+            <option value=3>Certification Prep Class -- 75% Covered</option>
+            <option value=4>Certification -- 100% Covered</option>
+            <option value=5>Technical Training -- 90% Covered</option>
+            <option value=6>Other -- 30% Covered</option>
+        </select>
+        <br>
+        <label for="availableFunds">Funds Available: $</label>
+        <p id="availableFunds"></p>
+        <br>
+        <label for="event_amount">Event Amount: $</label>
+        <input id="event_amount" type="number" min="1" max="1000" step="0.01" required>
+        <button id="checkFunds" type="button" onclick="calculateFunds()">Check If Enough Funds</button>
+        <br>
+        <select id="grading_format">
+            <option value=0>Select a Grading Format (Default Passing Mark)</option>
+            <option value=1>Letter Grade (C to pass)</option>
+            <option value=2>Number Grade (70% pass)</option>
+            <option value=3>Pass/Fail</option>
+            <option value=4>Performance Rating (Meets Standards to pass)</option>
+        </select>
+        <br>
+        <label for="grading_cutoff">Passing Grade (if nonstandard):</label>
+        <input id="grading_cutoff" type="text" placeholder="this field is optional, and rarely used">
+
+        
+
+        <button type="submit" id="submitRequest" onclick="logRequest()">Submit Request</button>
+    
+        <script>
+            function getAvailableFunds(){
+                var availableReimbursement = sessionStorage.getItem("availableReimbursement");
+                let availFunds = document.createElement("p");
+                availFunds.innerHTML= "$"+availableReimbursement;
+                document.getElementById("availableFunds").append(availFunds);
+            }
+            function calculateFunds(){
+                
+                switch(document.getElementById("event_type").value){
+                    case "null": alert("Please Select an Event Type"); break;
+                    case "1": eventMult = 0.8; break;
+                    case "2": eventMult = 0.6; break;
+                    case "3": eventMult = 0.75; break;
+                    case "4": eventMult = 1; break;
+                    case "5": eventMult = 0.9; break;
+                    case "6": eventMult = 0.3; break;
+                }
+                let newReimbursement = document.getElementById("event_amount").value;
+                let fundsAvailable = sessionStorage.getItem("availableReimbursement");
+                if(fundsAvailable<(eventMult*newReimbursement)){
+                    demandedReimbursement=fundsAvailable;
+                    alert("Not enough funds to provide maximum allowed coverage. Full reimbursement is not guaranteed.");
+                }else{
+                    demandedReimbursement=eventMult*newReimbursement;
+                    alert("You have enough funds to provide maximum coverage for this event, pending event approval");}
+                sessionStorage.setItem("demandedReimbursement",demandedReimbursement);
+                
+
+            }
+            let baseUrl = "http://localhost:8080";
+            async function logRequest(){
+                calculateFunds();
+                let id = parseInt(sessionStorage.getItem("user_id"));
+                demandedReimbursement=parseFloat(sessionStorage.getItem("demandedReimbursement"));
+                let newPendingReimbursement = parseFloat(sessionStorage.getItem('pendingReimbursements'));
+                newPendingReimbursement+=demandedReimbursement;
+                let employee = JSON.parse(sessionStorage.getItem("employee"));
+                employee.pendingReimbursements = newPendingReimbursement;
+                sessionStorage.setItem("employee",employee);
+                let employeeJSON = JSON.stringify(employee);
+                let empUpdate = await fetch(`${baseUrl}/${id}`,
+                    {
+                        method: "PUT",
+                        headers: {"Content-Type": "application/json"},
+                        body:employeeJSON
+                    }
+                //fails due to backend not parsing body as Employee object
+                );
+                
+                let newRequest = {
+                    id: sessionStorage.getItem('user_id'),
+                    eventDate: new Date(document.getElementById("event_date").value),
+                    eventDescription: document.getElementById('event_description').value,
+                    employeeJustification: document.getElementById('employee_justification').value,
+                    eventType: document.getElementById("event_type").value,
+                    eventAmount: sessionStorage.getItem("demandedReimbursement"),
+                    gradingFormat: document.getElementById('grading_format').value,
+                    gradingCutoff: document.getElementById('grading_cutoff').value                  
+
+                }
+                let requestJson = JSON.stringify(newRequest);
+                console.log(requestJson);
+                let response = await fetch(`${baseUrl}/${id}/requests`,
+                    {
+                        method: "POST",
+                        headers: {"Content-Type": "application/json"},
+                        body: requestJson
+                    }
+                )
+                if (response.status === 200) {
+                    let resBody = await response.json();
+                    console.log(resBody);
+                    alert("Request submitted! Please remember to submit your grade when possible once your request is approved.");
+                }else{
+                    console.log("Submission Failed");
+                    alert("Submission Failed. Ensure all necessary fields are filled and try again.");
+                    //fails due to naming convention mismatches, trying to send employee details as part of same object as request. Should be easy fix.
+                }
+            }
+        </script>
+
+    </body>
+</html>

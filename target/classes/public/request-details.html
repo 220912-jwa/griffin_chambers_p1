@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Details</title>
+</head>
+<body onload="loadRequest()">
+<div>
+    <h1>Case Details</h1>
+    <label for="caseID">Request ID:</label>
+    <p id="caseID"></p>
+    <label for="userID">Submitter ID:</label>
+    <p id="userID"></p>
+    <label for="caseStatus">Case Status:</label>
+    <p id="caseStatus"></p>
+    <label for="eventAmount">Requested Funds:</label>
+    <p id="eventAmount"></p>
+    <label for="exceedsFunds">Exceeds Funds?</label>
+    <p id="exceedsFunds"></p>
+    <label for="managerComments">Manager Comments:</label>
+    <p id="managerComments"></p>
+    <label for="eventDate">Event Date:</label>
+    <p id="eventDate"></p>
+    <label for="eventDescription">Event Description:</label>
+    <p id="eventDescription"></p>
+    <label for="justification">Justification:</label>
+    <p id="justification"></p>
+    <label for="eventType">Event Type:</label>
+    <p id="eventType"></p>
+    <label for="gradingFormat">Grading Format:</label>
+    <p id="gradingFormat"></p>
+    <label for="gradingCutoff">Grading Cutoff:</label>
+    <p id="gradingCutoff"></p>
+    <label for="gradeReceived">Grade Received:</label>
+    <p id="gradeReceived"></p>
+
+
+    
+
+    
+</div></body>
+<script>
+    function loadRequest(){
+        const caseID = sessionStorage.getItem("currentCase");
+        let req=sessionStorage.getItem(caseID.toString());
+        request=JSON.parse(req);
+
+
+        let caseIDP=document.getElementById("caseID");
+        caseIDP.innerHTML=request.caseID;
+        let userIDP=document.getElementById("userID");
+        userIDP.innerHTML=request.id;
+        let caseStatusP=document.getElementById("caseStatus");
+        switch(request.caseStatus){
+                case 1: newCaseStatus="Pending Approval"; break;
+                case 2: newCaseStatus="Approved -- Pending Grade"; break;
+                case 3: newCaseStatus="Rejected"; break;
+                case 4: newCaseStatus="Approved -- Funds Dispersed"; break;
+        }
+        caseStatusP.innerHTML=newCaseStatus;
+        let eventAmountP=document.getElementById("eventAmount");
+        eventAmountP.innerHTML=request.eventAmount;
+        let exceedsFundsP=document.getElementById("exceedsFunds");
+        exceedsFundsP.innerHTML=request.exceedsFunds;
+        let managerCommentsP=document.getElementById("managerComments");
+        managerCommentsP.innerHTML=request.managerComments;
+        let eventDateP=document.getElementById("eventDate");
+        eventDateP.innerHTML=request.eventDate;
+        let eventDescriptionP=document.getElementById("eventDescription");
+        eventDescriptionP.innerHTML=request.eventDescription;
+        let justificationP=document.getElementById("justification");
+        justificationP.innerHTML=request.employeeJustification;
+        let eventTypeP=document.getElementById("eventType");
+        switch(request.eventType){
+                case 1: newEventType="University Course"; break;
+                case 2: newEventType="Seminar"; break;
+                case 3: newEventType="Certification Preparation Class"; break;
+                case 4: newEventType="Certification"; break;
+                case 5: newEventType="Technical Training"; break;
+                case 6: newEventType="Other"; break;
+        }
+        eventTypeP.innerHTML=newEventType;
+        let gradingFormatP=document.getElementById("gradingFormat");
+        switch(request.gradingFormat){
+                case 1: newGradingFormat="Letter Grade"; break;
+                case 2: newGradingFormat="Number Grade"; break;
+                case 3: newGradingFormat="Pass/Fail"; break;
+                case 4: newGradingFormat="Performance Rating"; break;
+        }
+        gradingFormatP.innerHTML=newGradingFormat;
+        let gradingCutoffP=document.getElementById("gradingCutoff");
+        gradingCutoffP.innerHTML=request.gradingCutoff;
+        let gradeReceivedP=document.getElementById("gradeReceived");
+        gradeReceivedP.innerHTML=request.gradeReceived;
+
+
+        isManager=sessionStorage.getItem("isManager");
+        if (isManager=="true"){
+            //add the approval tools
+            var adjustAmount = document.createElement("input");
+            adjustAmount.text="New Amount";
+            adjustAmount.type="number";
+            document.getElementById("eventAmount").append(adjustAmount);
+            let editStatus = document.createElement("p");
+            editStatus.innerHTML = 
+            `<select id="newStatus">
+                <option value=1>Pending Approval</option>
+                <option value=2>Approved -- Pending Grade</option>
+                <option value=3>Rejected</option>
+                <option value=4>Approved -- Funds Dispersed</option>            
+            </select>`;
+            let confirmCase = document.createElement("p");
+            confirmCase.innerHTML = `<button type="button" text="Confirm Changes" onclick="updateCase()">Confirm Changes</button> `;
+            document.body.append(editStatus);
+            document.body.append(confirmCase);
+        }else{
+            //add grade upload tools
+            var uploadGrade = document.createElement("input");
+            uploadGrade.type="text";
+            document.getElementById("gradeReceived").append(uploadGrade);
+            let confirmGrade = document.createElement("p");
+            confirmGrade.innerHTML = `<button type="button" text="Confirm Grade" id="confirmGrade" onclick="uploadGrade()">Confirm Grade</button> `;
+            document.getElementById("gradeReceived").append(confirmGrade);
+
+        }
+    }
+    async function updateCase(){}
+    async function uploadGrade(){}
+</script>

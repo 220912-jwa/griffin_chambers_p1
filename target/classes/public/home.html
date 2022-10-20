@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+</head>
+<body onload="loadRequests()">
+<div>
+    <table id="requests" border="1px solid black">
+        <thead>
+            <th>Case ID</th>
+            <th>User ID</th>
+            <th>Case Status</th>
+            <th>Exceeds Funds</th>
+            <th>Event Date</th>
+            <th>Event Amount</th>
+            <th>Grade Recieved</th>
+            <th>  Details  </th>
+            
+            
+        </thead>
+        <tbody></tbody>
+    </table>
+    <button type="button" id="submitRequest" onclick="document.location.assign('./request-submission.html')">Submit A New Request</button>
+</div></body>
+<script>
+    
+    async function loadRequests(){
+        isManager = sessionStorage.getItem("isManager");
+        baseUrl = "http://localhost:8080";
+        if(isManager==="true"){
+            let res = await fetch(
+                            `${baseUrl}/requests`,                            
+                        );
+                        if(res.status === 200){
+                        let resJson = await res.json();
+                        console.log(resJson);  
+                        let requestList = resJson;                      
+                        requestList.forEach(request => {populateTable(request);});
+                        requestList.forEach(request => {isUrgent(request)});}
+                    
+
+        }else{
+            let user_id = parseInt(sessionStorage.getItem("user_id"));
+            let res = await fetch(
+                `${baseUrl}/${user_id}/requests`,
+            );
+            if(res.status === 200){
+                        let resJson = await res.json();
+                        let requestList = resJson;                      
+                        requestList.forEach(request => {populateTable(request);
+                        });
+                    }
+        }
+    }
+    function isUrgent(request) {
+        deadline = (new Date() + 14);
+        if (request.caseStatus==1 && request.gradeRecieved === null && deadline>request.eventDate){
+            id = "";
+            id+=request.id;
+            row = document.getElementById(id);
+            row.style.color='red';
+            //an urgent request is one that is pending <2weeks before the event
+            //should highlight row in red in overview page
+    }
+    }
+    function populateTable(request){
+        let baseUrl = "http://localhost:8080";
+        sessionStorage.setItem(`${request.caseID}`,JSON.stringify(request));
+        console.log(sessionStorage.getItem(request.caseID));
+        let requestTable = document.getElementById("requests");
+        let newRow = document.createElement("tr");
+        newRow.id = request.caseID;
+        let caseID = document.createElement("td");
+        caseID.innerHTML = request.caseID;
+        let userID = document.createElement("td");
+        userID.innerHTML = request.id;
+        let caseStatus = document.createElement("td");
+        switch (request.caseStatus){
+            case 1: caseStatus.innerHTML = "Pending Review"; break;
+            case 2: caseStatus.innerHTML = "Approved -- Pending Grade"; break;
+            case 3: caseStatus.innerHTML = "Approved -- Funds Dispersed"; break;
+            case 4: caseStatus.innerHTML = "Rejected"; break;
+        }
+        let exceedsFunds = document.createElement("td");
+        exceedsFunds.innerHTML = request.exceedsFunds; 
+        let eventDate = document.createElement("td");
+        eventDate.innerHTML = request.eventDate;
+        let eventAmount = document.createElement("td");
+        eventAmount.innerHTML = "$"+request.eventAmount;
+        let gradeRecieved = document.createElement("td");
+        gradeRecieved.innerHTML = request.gradeRecieved;
+        let detailsButton = document.createElement("td");
+        saveCase = request.caseID;
+        detailsButton.innerHTML = `<button type="button" text="Details" onclick="goToDetails(saveCase)">Details</button> `;
+        //button = document.createElement("input");
+        //button.type = "button";
+        //button.innerHTML="Details";
+        //button.onClick =goToDetails();
+        //{sessionStorage.setItem('caseID',request.caseID);
+        //document.location.assign("./request-details.html");}
+       
+
+        newRow.append(caseID,userID,caseStatus,exceedsFunds,eventDate,eventAmount,gradeRecieved,detailsButton);
+        requestTable.append(newRow);
+    }
+    function goToDetails(caseID){
+        sessionStorage.setItem("currentCase",caseID);
+        document.location.assign("./request-details.html");
+    }
+    
+</script>

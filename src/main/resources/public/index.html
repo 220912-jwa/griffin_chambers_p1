@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>ERS Login</title>
+</head>
+<body>
+
+    <h1 style="margin:auto; width: 35%; text-align:center; padding:150px" >ERS Login</h1>
+    <div style="margin:auto; width: 15%; text-align:center; border: 5px solid black; padding:20px">
+
+        <label for="email">Email:</label>
+        <input id="email" type="text" placeholder="Enter your company email"/>
+
+        <br/><br/>
+
+        <label for="pass">Password: </label>
+        <input id="pass" type="password" placeholder="Enter your password"/>
+
+        <br/><br/>
+
+        <button id="login" type="button" onclick="login()">Login</button>
+       
+    </div>
+    <script>
+        async function login() {
+            em= document.getElementById('email').value;
+            pw= document.getElementById('pass').value;
+            let credentials = {
+                email: em,
+                pass: pw
+            }
+            credentialsJSON = JSON.stringify(credentials);
+            let baseUrl = "http://localhost:8080";
+            let response = await fetch(
+                            `${baseUrl}/authenticate`, // url
+                            {
+                                method: 'POST',
+                                header: {'Content-Type': 'application/json'},
+                                body: credentialsJSON
+                            }
+                        ); 
+            if (response.status === 200) {
+                let resJson = await response.json();
+                sessionStorage.setItem("employee",JSON.stringify(resJson));
+                sessionStorage.setItem('user_id',resJson.id);
+                availableReimbursement = 1000-resJson.pendingReimbursements-resJson.awardedReimbursements;
+                sessionStorage.setItem('availableReimbursement',availableReimbursement);
+                sessionStorage.setItem('pendingReimbursements',resJson.pendingReimbursements);
+                sessionStorage.setItem('isManager',resJson.manager);
+                document.location.assign("./home.html");
+            } else {
+                console.log("Login failed");
+                alert("Incorrect email/password combination. Please try again.");
+            }
+        }
+    </script>
